@@ -84,26 +84,20 @@ class PageTemplater {
 
         public function register_project_templates( $atts ) {
 
+		// Get theme object
+		$theme = wp_get_theme();
+
                 // Create the key used for the themes cache
-                $cache_key = 'page_templates-' . md5( get_theme_root() . '/' . get_stylesheet() );
+                $cache_key = 'page_templates-' . md5( $theme->get_theme_root() . '/' . $theme->get_stylesheet() );
 
-                // Retrieve the cache list. 
-				// If it doesn't exist, or it's empty prepare an array
-				$templates = wp_get_theme()->get_page_templates();
-                if ( empty( $templates ) ) {
-                        $templates = array();
-                } 
+                // Retrieve existing page templates
+		$templates = $theme->get_page_templates();
 
-                // New cache, therefore remove the old one
-                wp_cache_delete( $cache_key , 'themes');
-
-                // Now add our template to the list of templates by merging our templates
-                // with the existing templates array from the cache.
+                // Add our template(s) to the list of existing templates by merging the arrays
                 $templates = array_merge( $templates, $this->templates );
 
-                // Add the modified cache to allow WordPress to pick it up for listing
-                // available templates
-                wp_cache_add( $cache_key, $templates, 'themes', 1800 );
+                // Replace existing value in cache
+                wp_cache_set( $cache_key, $templates, 'themes', 1800 );
 
                 return $atts;
 
