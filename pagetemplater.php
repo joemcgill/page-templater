@@ -1,139 +1,126 @@
 <?php
 /*
-Plugin Name: Page Template Plugin : 'Good To Be Bad'
-Plugin URI: http://hbt.io/
-Version: 1.0.1
-Author: Harri Bell-Thomas
-Author URI: http://hbt.io/
+Plugin Name: WashU Custom Site Registration
+Plugin URI: https://github.com/wustlweb/wustl-custom-wpmu-signup
+Version: 0.1.0
+Author: Joe McGill
+Author URI: http://wustl.edu
+Description: Custom WPMU signup page plugin based on a fork of Harri Bell-Thomas' Page Templater Plugin https://github.com/HarriBellThomas/page-templater
 */
 
 class PageTemplater {
 
 		/**
-         * A Unique Identifier
-         */
-		 protected $plugin_slug;
+     * A Unique Identifier
+     */
+		protected $plugin_slug;
 
-        /**
-         * A reference to an instance of this class.
-         */
-        private static $instance;
+    /**
+     * A reference to an instance of this class.
+     */
+    private static $instance;
 
-        /**
-         * The array of templates that this plugin tracks.
-         */
-        protected $templates;
+    /**
+     * The array of templates that this plugin tracks.
+     */
+    protected $templates;
 
+    /**
+     * Returns an instance of this class.
+     */
+    public static function get_instance() {
 
-        /**
-         * Returns an instance of this class. 
-         */
-        public static function get_instance() {
+      if ( null == self::$instance ) {
+        self::$instance = new PageTemplater();
+      }
 
-                if( null == self::$instance ) {
-                        self::$instance = new PageTemplater();
-                } 
+      return self::$instance;
+    }
 
-                return self::$instance;
+    /**
+     * Initializes the plugin by setting filters and administration functions.
+     */
+    private function __construct() {
 
-        } 
+      $this->templates = array();
 
-        /**
-         * Initializes the plugin by setting filters and administration functions.
-         */
-        private function __construct() {
+      // Add a filter to the attributes metabox to inject template into the cache.
+      add_filter(
+				'page_attributes_dropdown_pages_args',
+				 array( $this, 'register_project_templates' )
+			);
 
-                $this->templates = array();
+      // Add a filter to the save post to inject out template into the page cache
+      add_filter(
+				'wp_insert_post_data',
+				array( $this, 'register_project_templates' )
+			);
 
+      // Add a filter to the template include to determine if the page has our
+			// template assigned and return it's path
+      add_filter(
+				'template_include',
+				array( $this, 'view_project_template')
+			);
 
-                // Add a filter to the attributes metabox to inject template into the cache.
-                add_filter(
-					'page_attributes_dropdown_pages_args',
-					 array( $this, 'register_project_templates' ) 
-				);
+      // Add your templates to this array.
+      $this->templates = array(
+              'wustl-custom-signup.php' => 'Custom Site Registration',
+      );
 
+    }
 
-                // Add a filter to the save post to inject out template into the page cache
-                add_filter(
-					'wp_insert_post_data', 
-					array( $this, 'register_project_templates' ) 
-				);
+    /**
+     * Adds our template to the pages cache in order to trick WordPress
+     * into thinking the template file exists where it doens't really exist.
+     *
+     */
+    public function register_project_templates( $atts ) {
 
+			// Get theme object
+			$theme = wp_get_theme();
 
-                // Add a filter to the template include to determine if the page has our 
-				// template assigned and return it's path
-                add_filter(
-					'template_include', 
-					array( $this, 'view_project_template') 
-				);
+	    // Create the key used for the themes cache
+	    $cache_key = 'page_templates-' . md5( $theme->get_theme_root() . '/' . $theme->get_stylesheet() );
 
+      // Retrieve existing page templates
+			$templates = $theme->get_page_templates();
 
-                // Add your templates to this array.
-                $this->templates = array(
-                        'goodtobebad-template.php'     => 'It\'s Good to Be Bad',
-                );
-				
-        } 
+      // Add our template(s) to the list of existing templates by merging the arrays
+      $templates = array_merge( $templates, $this->templates );
 
+      // Replace existing value in cache
+      wp_cache_set( $cache_key, $templates, 'themes', 1800 );
 
-        /**
-         * Adds our template to the pages cache in order to trick WordPress
-         * into thinking the template file exists where it doens't really exist.
-         *
-         */
+      return $atts;
 
-        public function register_project_templates( $atts ) {
+    }
 
-		// Get theme object
-		$theme = wp_get_theme();
+    /**
+     * Checks if the template is assigned to the page
+     */
+    public function view_project_template( $template ) {
 
-                // Create the key used for the themes cache
-                $cache_key = 'page_templates-' . md5( $theme->get_theme_root() . '/' . $theme->get_stylesheet() );
+			global $post;
 
-                // Retrieve existing page templates
-		$templates = $theme->get_page_templates();
+			if ( !isset( $this->templates[ get_post_meta( $post->ID, '_wp_page_template', true ) ] ) ) {
+			  return $template;
+			}
 
-                // Add our template(s) to the list of existing templates by merging the arrays
-                $templates = array_merge( $templates, $this->templates );
+			$file = plugin_dir_path(__FILE__) . get_post_meta( $post->ID, '_wp_page_template', true );
 
-                // Replace existing value in cache
-                wp_cache_set( $cache_key, $templates, 'themes', 1800 );
+			// Just to be safe, we check if the file exist first
+			if ( file_exists( $file ) ) {
+			  return $file;
+			} else {
+				echo $file;
+			}
 
-                return $atts;
+			return $template;
 
-        } 
+    }
 
-        /**
-         * Checks if the template is assigned to the page
-         */
-        public function view_project_template( $template ) {
-
-                global $post;
-
-                if (!isset($this->templates[get_post_meta( 
-					$post->ID, '_wp_page_template', true 
-				)] ) ) {
-					
-                        return $template;
-						
-                } 
-
-                $file = plugin_dir_path(__FILE__). get_post_meta( 
-					$post->ID, '_wp_page_template', true 
-				);
-				
-                // Just to be safe, we check if the file exist first
-                if( file_exists( $file ) ) {
-                        return $file;
-                } 
-				else { echo $file; }
-
-                return $template;
-
-        } 
-
-
-} 
+}
 
 add_action( 'plugins_loaded', array( 'PageTemplater', 'get_instance' ) );
 
