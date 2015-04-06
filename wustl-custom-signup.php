@@ -33,7 +33,7 @@ get_header(); ?>
 			// Make the signup type translatable.
 			$i18n_signup['all'] = _x('all', 'Multisite active signup type');
 			$i18n_signup['none'] = _x('none', 'Multisite active signup type');
-			<1i18n_signup></1i18n_signup>['blog'] = _x('blog', 'Multisite active signup type');
+			$i18n_signup['blog'] = _x('blog', 'Multisite active signup type');
 			$i18n_signup['user'] = _x('user', 'Multisite active signup type');
 
 			if ( is_super_admin() )
