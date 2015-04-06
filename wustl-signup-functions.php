@@ -122,28 +122,14 @@ function signup_another_blog($blogname = '', $blog_title = '', $errors = '') {
 	$blog_title = $filtered_results['blog_title'];
 	$errors = $filtered_results['errors'];
 
-	echo '<h2>' . sprintf( __( 'Get <em>another</em> %s site in seconds' ), $current_site->site_name ) . '</h2>';
+	echo '<h2>' . __( 'Create a Site') . '</h2>';
 
 	if ( $errors->get_error_code() ) {
-		echo '<p>' . __( 'There was a problem, please correct the form below and try again.' ) . '</p>';
+		echo '<p class="error">' . __( 'There was a problem, please correct the form below and try again.' ) . '</p>';
 	}
 	?>
-	<p><?php printf( __( 'Welcome back, %s. By filling out the form below, you can <strong>add another site to your account</strong>. There is no limit to the number of sites you can have, so create to your heart&#8217;s content, but write responsibly!' ), $current_user->display_name ) ?></p>
+	<p class="lead"><?php printf( __( 'Request your %s site in seconds' ), $current_site->site_name ) ?></p>
 
-	<?php
-	$blogs = get_blogs_of_user($current_user->ID);
-	if ( !empty($blogs) ) { ?>
-
-			<p><?php _e( 'Sites you are already a member of:' ) ?></p>
-			<ul>
-				<?php foreach ( $blogs as $blog ) {
-					$home_url = get_home_url( $blog->userblog_id );
-					echo '<li><a href="' . esc_url( $home_url ) . '">' . $home_url . '</a></li>';
-				} ?>
-			</ul>
-	<?php } ?>
-
-	<p><?php _e( 'If you&#8217;re not going to use a great site domain, leave it for a new user. Now have at it!' ) ?></p>
 	<form id="setupform" method="post" action="<?php the_permalink(); ?>">
 		<input type="hidden" name="stage" value="gimmeanotherblog" />
 		<?php do_action( 'signup_hidden_fields' ); ?>
